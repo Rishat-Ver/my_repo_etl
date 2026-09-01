@@ -10,7 +10,7 @@ from airflow.operators.python import PythonOperator
 
 default_args = {
     'owner': 'airflow',
-    'concurrency': 2,
+    'concurrency': 1,
     'retries': 3,
     'retry_delay': timedelta(seconds=10),
 }

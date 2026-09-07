@@ -32,8 +32,8 @@ class UserOrderModel(pydantic.BaseModel):
     item_id: int
     item_name: str
     quantity: int
-    payment_amount: int 
-    
+    payment_amount: int
+
 class UserActivityModel(pydantic.BaseModel):
     id: int
     uniq_id: str
@@ -41,7 +41,7 @@ class UserActivityModel(pydantic.BaseModel):
     action_id: int
     customer_id: int
     quantity: int
-    
+
 def insert_user_order_log(**kwargs):
     ds = kwargs['ds']
     payload = {'limit': '20000000', 'filter': {'date': ds}}
@@ -55,8 +55,8 @@ def insert_user_order_log(**kwargs):
     ) as conn:
         with conn.cursor() as cur:
             for row in data:
-            respmodel = UserOrderModel(**row)
-            cur.execute(query, respmodel.model_dump())
+                respmodel = UserOrderModel(**row)
+                cur.execute(query, respmodel.model_dump())
         print('committed')
 
 
@@ -73,8 +73,8 @@ def insert_user_activity_log(**kwargs):
     ) as conn:
         with conn.cursor() as cur:
             for row in data:
-            respmodel = UserActivityModel(**row)
-            cur.execute(query, respmodel.model_dump())
+                respmodel = UserActivityModel(**row)
+                cur.execute(query, respmodel.model_dump())
         print('committed')
 
 ##############################################################################
@@ -143,7 +143,7 @@ def load_d_customer():
 
 
 def load_d_city():
-    query = """ 
+    query = """
     WITH
          api_data AS ( --актуальные на дату расчёта данные в источнике
              SELECT DISTINCT
@@ -273,8 +273,8 @@ def load_f_activity():
     ual.action_id,
     quantity
     FROM public.user_activity_log ual
-    JOIN public.d_customer cus 
-    ON cus.customer_id = ual.customer_id 
+    JOIN public.d_customer cus
+    ON cus.customer_id = ual.customer_id
     AND '{{ds}}'::date BETWEEN cus.start_date AND cus.end_date
                 WHERE ual.date_time::date = '{{ds}}'::date
                 ORDER BY uniq_id, date_time DESC
@@ -313,7 +313,7 @@ with DAG('api_data_load',
                             python_callable=load_d_item,
                             provide_context=True)
 ##############################################################################
-  
+
     f_order = PythonOperator(task_id='f_order',
                              python_callable=load_f_order,
                              provide_context=True)
@@ -322,5 +322,5 @@ with DAG('api_data_load',
                                 python_callable=load_f_activity,
                                 provide_context=True)
 
-    (order_log >> activity_log >> d_customer >> d_city >> 
+    (order_log >> activity_log >> d_customer >> d_city >>
     d_item >> f_order >> f_activity)

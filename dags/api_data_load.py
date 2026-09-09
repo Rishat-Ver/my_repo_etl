@@ -42,7 +42,7 @@ with DAG('api_data_load',
         op_kwargs={'query': """
                                 DELETE FROM public.user_activity_log
                                 WHERE date_time::date='{{ ds }}'"""},  # новый оператор с запросом
-        )
+    )
 
     activity_log = PythonOperator(
         task_id='activity_log',
@@ -89,6 +89,14 @@ with DAG('api_data_load',
         provide_context=True,
         op_kwargs={'query': d_item_query}
     )
+    clean_f_order = PythonOperator(
+        task_id='clean_f_order',
+        python_callable=execute_postgres_query,
+        provide_context=True,
+        op_kwargs={'query': """
+                                DELETE FROM public.f_order
+                                WHERE create_date::date='{{ ds }}'"""},
+    )
 
     f_order = PythonOperator(
         task_id='load_f_order',
@@ -96,6 +104,15 @@ with DAG('api_data_load',
         provide_context=True,
         op_kwargs={'query': f_order_query}
     )
+
+    clean_f_activity = PythonOperator(
+        task_id='clean_f_activity',
+        python_callable=execute_postgres_query,
+        provide_context=True,
+        op_kwargs={'query': """
+                                DELETE FROM public.f_activity
+                                WHERE create_date::date='{{ ds }}'"""},  # новый оператор с запросом
+        )
 
     f_activity = PythonOperator(
         task_id='load_f_activity',
@@ -113,4 +130,4 @@ with DAG('api_data_load',
 
     (clean_order_log >> order_log >> clean_activity_log >> activity_log >> d_customer_stg >>
      d_customer >> d_city_stg >> d_city >> d_item_stg >> d_item >>
-     f_order >> f_activity >> customer_report)  # добавляем новые таски
+     clean_f_order >> f_order >> clean_f_activity >> f_activity >> customer_report)  # добавляем новые таски
